@@ -4,7 +4,7 @@ module Moonhshine
       Pathname.new(__FILE__).dirname.join('passenger_monitor', 'templates')
     end
     
-    def passenger_monitor
+    def passenger_monitor(options = {})
       if configuration[:passenger]
         file '/usr/local/bin/passenger-memory-monitor',
               :ensure => :present,
@@ -22,7 +22,7 @@ module Moonhshine
             :weekday => options[:cron][:weekday] || '*',
             :user => :root
         else
-          cron 'passenger_memory_monitor', :ensure => :absent
+          cron 'passenger_memory_monitor', :command => true, :ensure => :absent
         end
       end
     end

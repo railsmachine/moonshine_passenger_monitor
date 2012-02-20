@@ -7,11 +7,22 @@ than a specified size. The timing can also be adjusted based on when the cron jo
 
 === Instructions
 
-* <tt>rails 2: script/plugin install git://github.com/railsmachine/moonshine_passenger_monitor.git</tt>
-* <tt>rails 3: rails plugin install git://github.com/railsmachine/moonshine_passenger_monitor.git</tt>
-* Edit moonshine.yml to customize plugin settings if desired:
+* rails 2: <tt>script/plugin install git://github.com/railsmachine/moonshine_passenger_monitor.git</tt>
+* rails 3: <tt>rails plugin install git://github.com/railsmachine/moonshine_passenger_monitor.git</tt>
+* Edit moonshine.yml to customize plugin settings as desired:
     :passenger_monitor
-      :memory: 500 (size in MB, 500 is the default)
+      # size in MB, 500 is the default
+      :memory: 500
+      
+      # configure pattern to grep for based on app [Rack, pre-Rack, proctitle]
+      # Rack
+      :pattern: 'Rack: /srv/#{configuration[:application]}/current'
+      
+      # pre-Rack
+      # :pattern: 
+      
+      # proctitle
+      # :pattern: '[#{configuration[:application]}/(#{options[:port] || 80)}]'
 
 * Include the plugin and recipe in your manifest:
     recipe :passenger_monitor

@@ -6,7 +6,7 @@ time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
 
 puts "#{time} Checking passenger-memory-stats for processes > #{limit} MB"
 
-lines=`ps ax -o 'pid,rss,cmd' | grep -e 'Rack: /srv/#{configuration[:deploy_to]}/current' | grep -v grep`
+lines=`ps ax -o 'pid,rss,cmd' | grep -e #{options[:pattern]} | grep -v grep`
 
 lines.each do |line|
 
