@@ -22,7 +22,17 @@ module Moonhshine
             :weekday => options[:cron][:weekday] || '*',
             :user => :root
         else
-          cron 'passenger_memory_monitor', :command => true, :ensure => :absent
+          cron 'passenger_memory_monitor', :command => 'true', :ensure => :absent
+        end
+        
+        rails_root = File.basename(Rails.root ? Rails.root : RAILS_ROOT)
+        
+        options[:pattern] ||= if File.exists?(rails_root.join('config.ru'))
+          'Rack: /srv/#{configuration[:application]}/current'
+        else
+          'Rails: /srv/#{configuration[:application]}/current'
+        elsif rails_root.nil?
+          '[#{configuration[:application]}/(#{options[:port] || 80)}]'
         end
       end
     end

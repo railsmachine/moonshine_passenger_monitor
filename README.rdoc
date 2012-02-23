@@ -15,13 +15,15 @@ than a specified size. The timing can also be adjusted based on when the cron jo
       :memory: 500
       
       # configure pattern to grep for based on app [Rack, pre-Rack, proctitle]
+      # this plugin will attempt to set this for you, but can be set manually
+      
       # Rack
-      :pattern: 'Rack: /srv/#{configuration[:application]}/current'
+      # :pattern: 'Rack: /srv/#{configuration[:application]}/current'
       
       # pre-Rack
-      # :pattern: 
+      # :pattern: 'Rails: /srv/#{configuration[:application]}/current'
       
-      # proctitle
+      # proctitle, port can be set or defaults to 80
       # :pattern: '[#{configuration[:application]}/(#{options[:port] || 80)}]'
 
 * Include the plugin and recipe in your manifest:
