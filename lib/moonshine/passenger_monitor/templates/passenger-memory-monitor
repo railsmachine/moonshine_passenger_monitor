@@ -6,9 +6,9 @@ time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
 
 puts "#{time} Checking passenger-memory-stats for processes > #{limit} MB"
 
-lines=`ps ax -o 'pid,rss,cmd' | grep -e #{options[:pattern]} | grep -v grep`
+lines=`ps ax -o 'pid,rss,cmd' | grep -e '<%= options[:pattern] %>' | grep -v grep`
 
-lines.each do |line|
+lines.each_line do |line|
 
   process = line.strip.split(/\s+/)
   pid, memory_in_mb, cmd = process[0], (process[1].to_i/1024).to_i, process[2..-1].join(' ')
@@ -18,8 +18,8 @@ lines.each do |line|
 
     puts  "#{time} - Passenger #{pid} exceeded the #{limit}MB limit with #{memory_in_mb}MB."
 
-    command = "kill -9 #{pid} # for: #{cmd}"
-    puts command
+    command = "kill -9 #{pid}"
+    puts "#{command} # for: #{cmd}"
     system(command)
   end
 end
