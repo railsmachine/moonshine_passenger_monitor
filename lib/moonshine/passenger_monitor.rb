@@ -1,4 +1,4 @@
-module Moonhshine
+module Moonshine
   module PassengerMonitor
     def monitor_template_dir
       Pathname.new(__FILE__).dirname.join('passenger_monitor', 'templates')
