@@ -6,6 +6,8 @@ module Moonshine
     
     def passenger_monitor(options = {})
       if configuration[:passenger]
+        options[:memory] || 500
+
         file '/usr/local/bin/passenger-memory-monitor',
               :ensure => :present,
               :content => template(monitor_template_dir.join('passenger-memory-monitor'), binding),
