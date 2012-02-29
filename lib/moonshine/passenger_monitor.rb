@@ -6,7 +6,12 @@ module Moonshine
     
     def passenger_monitor(options = {})
       if configuration[:passenger]
-        options[:memory] || 500
+        options[:memory] ||= 500
+        options[:pattern] ||= if rails_root.join('config.ru').exist?
+                                "Rack: /srv/#{configuration[:application]}/current"
+                              else
+                                "Rails: /srv/#{configuration[:application]}/current"
+                              end
 
         file '/usr/local/bin/passenger-memory-monitor',
               :ensure => :present,
@@ -27,11 +32,6 @@ module Moonshine
           cron 'passenger_memory_monitor', :command => 'true', :ensure => :absent
         end
         
-        options[:pattern] ||= if rails_root.join('config.ru').exist?
-                                "Rack: /srv/#{configuration[:application]}/current"
-                              else
-                                "Rails: /srv/#{configuration[:application]}/current"
-                              end
       end
     end
   end
