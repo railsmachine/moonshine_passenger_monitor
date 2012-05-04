@@ -27,7 +27,7 @@ module Moonshine
             :monthday => options[:cron][:monthday] || '*',
             :month => options[:cron][:month] || '*',
             :weekday => options[:cron][:weekday] || '*',
-            :user => :root
+            :user => 'root'
         else
           cron 'passenger_memory_monitor', :command => 'true', :ensure => :absent
         end
