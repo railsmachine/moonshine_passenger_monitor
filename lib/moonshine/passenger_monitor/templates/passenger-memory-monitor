@@ -36,7 +36,7 @@ lines.each_line do |line|
   elsif ! good_pids.include?(pid)
     puts  "#{time} - Passenger #{pid} abandoned by passenger-status"
 
-    command = "kill -9 #{pid} # 'for: #{cmd}'"
+    command = "kill -9 #{pid}"
     puts "#{command} # for: #{cmd}"
     system(command)
   end
