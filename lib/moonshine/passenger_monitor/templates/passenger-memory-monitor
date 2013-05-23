@@ -1,43 +1,55 @@
 #!/usr/bin/env ruby
 
+require 'phusion_passenger'
+if PhusionPassenger.respond_to?(:locate_directories)
+  PhusionPassenger.locate_directories
+end
+
+require 'phusion_passenger/platform_info'
+require 'phusion_passenger/admin_tools/memory_stats'
+
+include PhusionPassenger
+
 limit = (ARGV.first || 500).to_i
+stats = AdminTools::MemoryStats.new
 
+def kill_passenger_process(pid, cmd, reason)
+  time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
+  
+  puts "#{time} - Passenger #{pid} #{reason}."
+  
+  command = "kill -9 #{pid}"
+  puts "#{command} # for: #{cmd}"
+  system(command)
+end
+
+rack_processes = stats.passenger_processes.select { |p| p.name =~ /Rack/ }
+
+# kill abandoned passenger processes
 time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
+puts "#{time} Checking for stale passenger processes"
 
-puts "#{time} Checking passenger-status for stale processes"
-
-lines = `passenger-status 2>&1 | grep 'PID:' | grep -v 'grep'`
-
-good_pids = []
+good_pids = rack_processes.map { |p| p.pid }
+lines=`ps ax -o 'pid,command' | grep -e 'Rack' | grep -v grep`
 
 lines.each_line do |line|
-  if line =~ /PID: (\d+)/
-    good_pids << $1
+  process = line.strip.split(/\s+/)
+  pid, cmd = process[0].to_i, process[1..-1].join(' ')
+  
+  if ! good_pids.include?(pid)
+    kill_passenger_process(pid, cmd, "abandoned by passenger")
   end
 end
 
-puts "#{time} Checking passenger-memory-stats for processes > #{limit} MB"
+# kill passenger processes > #{limit} MB
+time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
+puts "#{time} Checking for passenger processes > #{limit} MB"
 
-lines=`ps ax -o 'pid,rss,cmd' | grep -e '<%= options[:pattern] %>' | grep -v grep`
-
-lines.each_line do |line|
-
-  process = line.strip.split(/\s+/)
-  pid, memory_in_mb, cmd = process[0], (process[1].to_i/1024).to_i, process[2..-1].join(' ')
-
-  time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
+rack_processes.each do |process|    
+  memory_in_mb = process.rss / 1024.0
+  
   if (memory_in_mb) > limit
-
-    puts  "#{time} - Passenger #{pid} exceeded the #{limit}MB limit with #{memory_in_mb}MB."
-
-    command = "kill -9 #{pid}"
-    puts "#{command} # for: #{cmd}"
-    system(command)
-  elsif ! good_pids.include?(pid)
-    puts  "#{time} - Passenger #{pid} abandoned by passenger-status"
-
-    command = "kill -9 #{pid}"
-    puts "#{command} # for: #{cmd}"
-    system(command)
+    reason = "exceeded the #{limit}MB limit with #{memory_in_mb}MB."
+    kill_passenger_process(process.pid, process.name, reason)
   end
 end
