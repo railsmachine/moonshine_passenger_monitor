@@ -1,6 +1,13 @@
 #!/usr/bin/env ruby
 
-require 'phusion_passenger'
+begin
+  require 'phusion_passenger'
+rescue LoadError
+  require 'rubygems'
+  gem 'passenger'
+  require 'phusion_passenger'
+end
+
 if PhusionPassenger.respond_to?(:locate_directories)
   PhusionPassenger.locate_directories
 end
