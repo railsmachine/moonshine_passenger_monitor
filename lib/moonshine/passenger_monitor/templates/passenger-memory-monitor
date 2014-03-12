@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'rubygems'
 require 'phusion_passenger'
 if PhusionPassenger.respond_to?(:locate_directories)
   PhusionPassenger.locate_directories
