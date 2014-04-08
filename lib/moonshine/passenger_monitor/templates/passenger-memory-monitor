@@ -24,14 +24,14 @@ def kill_passenger_process(pid, cmd, reason)
   system(command)
 end
 
-rack_processes = stats.passenger_processes.select { |p| p.name =~ /Rack/ }
+rack_processes = stats.passenger_processes.select { |p| p.name =~ /<%= options[:pattern] %>/ }
 
 # kill abandoned passenger processes
 time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
 puts "#{time} Checking for stale passenger processes"
 
 good_pids = rack_processes.map { |p| p.pid }
-lines=`ps ax -o 'pid,command' | grep -e 'Rack' | grep -v grep`
+lines=`ps ax -o 'pid,command' | grep -e '<%= options[:pattern] %>' | grep -v grep`
 
 lines.each_line do |line|
   process = line.strip.split(/\s+/)
