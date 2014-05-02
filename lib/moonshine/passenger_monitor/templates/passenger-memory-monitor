@@ -24,7 +24,7 @@ def kill_passenger_process(pid, cmd, reason)
   system(command)
 end
 
-rack_processes = stats.passenger_processes.select { |p| p.name =~ /<%= options[:pattern] %>/ }
+rack_processes = stats.passenger_processes.select { |p| p.name =~ /<%= options[:pattern].gsub(/\//, '\/') %>/ }
 
 # kill abandoned passenger processes
 time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
