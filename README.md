@@ -1,11 +1,11 @@
-= Moonshine_Passenger_Monitor
+# Moonshine_Passenger_Monitor
 
-== A plugin for Moonshine[http://github.com/railsmachine/moonshine]
+### A plugin for [Moonshine](http://github.com/railsmachine/moonshine)
 
 This plugin provides a monitoring script to kill and log Passenger processes that are larger
 than a specified size. The timing can also be adjusted based on when the cron job is set to run.
 
-=== Instructions
+### Instructions
 
 * rails 2: <tt>script/plugin install git://github.com/railsmachine/moonshine_passenger_monitor.git</tt>
 * rails 3: <tt>rails plugin install git://github.com/railsmachine/moonshine_passenger_monitor.git</tt>
@@ -31,3 +31,7 @@ than a specified size. The timing can also be adjusted based on when the cron jo
     recipe :passenger_monitor
     
 Deploy and done!
+
+***
+
+Unless otherwise specified, all content copyright &copy; 2014, [Rails Machine, LLC](http://railsmachine.com)
