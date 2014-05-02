@@ -8,6 +8,7 @@ end
 
 require 'phusion_passenger/platform_info'
 require 'phusion_passenger/admin_tools/memory_stats'
+require 'timeout'
 
 include PhusionPassenger
 
@@ -19,9 +20,17 @@ def kill_passenger_process(pid, cmd, reason)
   
   puts "#{time} - Passenger #{pid} #{reason}."
   
-  command = "kill -9 #{pid}"
-  puts "#{command} # for: #{cmd}"
-  system(command)
+  puts "Killing passenger process: #{cmd}"
+  begin
+    Process.kill('TERM', pid.to_i) rescue nil
+    Timeout::timeout(<%= options[:wait] || 5 %>) do
+      begin
+        sleep 1
+      end while !!(`ps -p #{pid}`.match pid)
+    end
+  rescue Timeout::Error
+    Process.kill('KILL', pid.to_i) rescue nil
+  end
 end
 
 rack_processes = stats.passenger_processes.select { |p| p.name =~ /<%= options[:pattern].gsub(/\//, '\/') %>/ }
