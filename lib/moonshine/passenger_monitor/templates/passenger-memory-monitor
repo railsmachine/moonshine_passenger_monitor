@@ -26,7 +26,7 @@ def kill_passenger_process(pid, cmd, reason)
     Timeout::timeout(<%= options[:wait] || 5 %>) do
       begin
         sleep 1
-      end while !!(`ps -p #{pid}`.match pid)
+      end while !!(`ps -p #{pid}`.match pid.to_s)
     end
   rescue Timeout::Error
     Process.kill('KILL', pid.to_i) rescue nil
