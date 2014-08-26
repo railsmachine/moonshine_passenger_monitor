@@ -30,8 +30,10 @@ def kill_passenger_process(pid, cmd, reason)
         sleep 1
       end while !!(`ps -p #{pid}`.match pid.to_s)
     end
+    puts "  TERM: Killed #{pid}"
   rescue Timeout::Error
     Process.kill('KILL', pid.to_i) rescue nil
+    puts "  KILL: Killed #{pid}"
   end
 end
 
