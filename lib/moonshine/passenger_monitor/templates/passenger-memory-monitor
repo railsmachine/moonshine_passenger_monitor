@@ -1,87 +1,33 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
-require 'phusion_passenger'
-if PhusionPassenger.respond_to?(:locate_directories)
-  PhusionPassenger.locate_directories
-end
-
-require 'phusion_passenger/platform_info'
-require 'phusion_passenger/admin_tools/memory_stats'
-require 'phusion_passenger/admin_tools/server_instance'
+require 'facter'
 require 'timeout'
-require 'rexml/document'
 
-include PhusionPassenger
+memused  = (Facter.value(:memorysize_mb).to_f - Facter.value(:memoryfree_mb).to_f)
+memtotal = Facter.value(:memorysize_mb).to_f
 
-limit = (ARGV.first || 500).to_i
-stats = AdminTools::MemoryStats.new
+exit 0 unless memused > (memtotal * 0.85)
 
-def kill_passenger_process(pid, cmd, reason)
-  time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
-  
-  puts "#{time} - Passenger #{pid} #{reason}."
-  
-  puts "Killing passenger process: #{cmd}"
-  begin
-    Process.kill('TERM', pid.to_i) rescue nil
-    Timeout::timeout(<%= options[:wait] || 5 %>) do
-      begin
-        sleep 1
-      end while !!(`ps -p #{pid}`.match pid.to_s)
-    end
-    puts "  TERM: Killed #{pid}"
-  rescue Timeout::Error
-    Process.kill('KILL', pid.to_i) rescue nil
-    puts "  KILL: Killed #{pid}"
-  end
-end
+limit = ARGV.shift.to_i
+limit = 500 if limit == 0
+puts "limit: #{limit}"
 
-rack_processes = stats.passenger_processes.select { |p| p.name =~ /<%= options[:pattern].gsub(/\//, '\/') %>/ }
-
-# kill abandoned passenger processes
-time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
-puts "#{time} Checking for stale passenger processes"
-
-good_pids = rack_processes.map { |p| p.pid }
-lines=`ps ax -o 'pid,command' | grep -e '<%= options[:pattern] %>' | grep -v grep`
-
-lines.each_line do |line|
-  process = line.strip.split(/\s+/)
-  pid, cmd = process[0].to_i, process[1..-1].join(' ')
-  
-  if ! good_pids.include?(pid)
-    kill_passenger_process(pid, cmd, "abandoned by passenger")
-  end
-end
-
-# kill passenger processes > #{limit} MB
-time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
-puts "#{time} Checking for passenger processes > #{limit} MB"
-
-rack_processes.each do |process|    
-  memory_in_mb = process.rss / 1024.0
-  
-  if (memory_in_mb) > limit
-    reason = "exceeded the #{limit}MB limit with #{memory_in_mb}MB."
-    kill_passenger_process(process.pid, process.name, reason)
-  end
-end
-
-# kill passenger processes stuck shutting down
-time = Time.now.strftime('%m/%d/%Y - %I:%M%p')
-puts "#{time} Checking for passenger processes stuck while shutting down"
-
-server = PhusionPassenger::AdminTools::ServerInstance.list.first
-client = server.connect(:role => :passenger_status)
-doc = REXML::Document.new(client.pool_xml)
-
-doc.elements.each("info/supergroups/supergroup/group") do |group_xml|
-  group_xml.elements.each("processes/process") do |process_xml|
-    if process_xml.elements["enabled"].text == "DETACHED"
-      pid = process_xml.elements["pid"].text.to_i
-      cmd = process_xml.elements["command"].text
-      kill_passenger_process(pid, cmd, "stuck while shutting down")
+passengers = `passenger-memory-stats  | grep '<%= options[:pattern] %>' | awk '{print $1 " " $4}'`.split("\n")
+passengers.each do |passenger|
+  pid, memory = passenger.split(" ")
+  if memory.to_i > limit
+    puts "Killing passenger process: #{pid}"
+    begin
+      Process.kill('TERM', pid.to_i) rescue nil
+      Timeout::timeout(5) do
+        begin
+          sleep 1
+        end while !!(`ps -p #{pid}`.match pid.to_s)
+      end
+      puts "  TERM: Killed #{pid}"
+    rescue Timeout::Error
+      Process.kill('KILL', pid.to_i) rescue nil
+      puts "  KILL: Killed #{pid}"
     end
   end
 end
